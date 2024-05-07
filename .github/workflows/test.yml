@@ -1,4 +1,4 @@
-name: Test action-ros-ci
+name: SROS2 CI
 on:
   pull_request:
   push:
@@ -6,9 +6,10 @@ on:
 jobs:
   test_latest:
     runs-on: ubuntu-latest
+    # 'osrf/ros2:devel' does *not* include RTI Connext or its' security plugins
+    # the former gets installed via rosdep in 'action-ros-ci' but the latter do *not* get installed
     container: osrf/ros2:devel
     steps:
-    # - uses: ros-tooling/setup-ros@v0.7
     - name: Install prerequisites for action-ros-ci and FastRTPS
       run: |
         apt-get -qq update
@@ -21,5 +22,32 @@ jobs:
           sros2_cmake
           test_security
         extra-cmake-args: '-DSECURITY=ON --no-warn-unused-cli'
+        colcon-defaults: |
+          {
+            "build": {
+              "mixin": ["coverage-pytest"]
+            },
+            "test": {
+              "mixin": ["coverage-pytest"]
+            }
+          }
+        colcon-mixin-repository: https://raw.githubusercontent.com/colcon/colcon-mixin-repository/master/index.yaml
         target-ros2-distro: rolling
         vcs-repo-file-url: https://raw.githubusercontent.com/ros2/ros2/rolling/ros2.repos
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/rolling')
+      with:
+        file: ros_ws/build/sros2/coverage.xml
+        flags: unittests
+        name: sros2-coverage
+        fail_ci_if_error: true
+    - name: Upload Logs
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: colcon-logs
+        path: ros_ws/log
