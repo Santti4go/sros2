@@ -14,7 +14,7 @@ jobs:
       run: |
         apt-get -qq update
         apt-get -qq upgrade -y
-        apt-get -qq install -y curl libasio-dev libssl-dev libtinyxml2-dev python3-colcon-coveragepy-result
+        apt-get -qq install -y curl libasio-dev libssl-dev libtinyxml2-dev python3-colcon-coveragepy-result python3-pytest-cov
     - uses: ros-tooling/action-ros-ci@v0.3
       env:
         DEBIAN_FRONTEND: noninteractive
