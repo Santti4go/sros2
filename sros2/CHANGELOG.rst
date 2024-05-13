@@ -2,8 +2,8 @@
 Changelog for package sros2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.13.1 (2024-05-13)
+-------------------
 * Fix linux tutorial: cloning example policies and set of default policies for a node (`#295 <https://github.com/ros2/sros2/issues/295>`_) (`#296 <https://github.com/ros2/sros2/issues/296>`_)
   * clone policies to temporary dir as subversion hack doesnt work anymore
   * add get_type_description service to policies
