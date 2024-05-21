@@ -19,7 +19,7 @@ import pytest
 from ros2cli import cli
 
 from sros2 import _utilities
-
+from sros2.policy import load_policy
 
 # Here we provide only very high level testing as this verb
 # is just a combination of calls to the others ones covered by precise tests
@@ -94,7 +94,7 @@ def test_cli_enclave_args(keystore_dir):
             assert (enclave_keys_dir / expected_file).is_file()
 
 
-def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
+def test_cli_invalid_policies_args(capsys, keystore_dir, test_policy_dir):
     enclave_list = ['/test_enclave', '/test_enclave2', '/minimal_action/minimal_action_server']
     command_args = ['security', 'generate_artifacts', '-k', str(keystore_dir)]
     for name in enclave_list:
@@ -107,7 +107,16 @@ def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
         ]
     )
     assert "Element 'topic': This element is not expected." in retcode
+
+
+def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
+    enclave_list = ['/test_enclave', '/test_enclave2', '/minimal_action/minimal_action_server']
+    command_args = ['security', 'generate_artifacts', '-k', str(keystore_dir)]
+    for name in enclave_list:
+        command_args.append('-e')
+        command_args.append(name)
     # # Test a valid policy file
+    policy = load_policy(test_policy_dir / 'minimal_action.policy.xml')
     # assert cli.main(
     #     argv=command_args + [
     #         '-p', str(test_policy_dir / 'minimal_action.policy.xml')
