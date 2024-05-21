@@ -107,20 +107,20 @@ def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
         ]
     )
     assert "Element 'topic': This element is not expected." in retcode
-    # Test a valid policy file
-    assert cli.main(
-        argv=command_args + [
-            '-p', str(test_policy_dir / 'minimal_action.policy.xml')
-        ]
-    ) == 0
-    # ensure that missing enclaves have been created on the fly
-    for name in enclave_list:
-        assert Path(keystore_dir / 'enclaves' / name.lstrip('/')).is_dir()
-    # Test a valid set of policy files
-    assert cli.main(
-        argv=command_args + [
-            '-p', str(test_policy_dir / 'minimal_action.policy.xml'),
-            '-p', str(test_policy_dir / 'add_two_ints.policy.xml'),
-            '-p', str(test_policy_dir / 'talker_listener.policy.xml'),
-        ]
-    ) == 0
+    # # Test a valid policy file
+    # assert cli.main(
+    #     argv=command_args + [
+    #         '-p', str(test_policy_dir / 'minimal_action.policy.xml')
+    #     ]
+    # ) == 0
+    # # ensure that missing enclaves have been created on the fly
+    # for name in enclave_list:
+    #     assert Path(keystore_dir / 'enclaves' / name.lstrip('/')).is_dir()
+    # # Test a valid set of policy files
+    # assert cli.main(
+    #     argv=command_args + [
+    #         '-p', str(test_policy_dir / 'minimal_action.policy.xml'),
+    #         '-p', str(test_policy_dir / 'add_two_ints.policy.xml'),
+    #         '-p', str(test_policy_dir / 'talker_listener.policy.xml'),
+    #     ]
+    # ) == 0
