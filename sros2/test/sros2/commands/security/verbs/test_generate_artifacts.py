@@ -19,10 +19,12 @@ import pytest
 from ros2cli import cli
 
 from sros2 import _utilities
+from sros2.api import _policy
 from sros2.policy import load_policy
 
 # Here we provide only very high level testing as this verb
 # is just a combination of calls to the others ones covered by precise tests
+
 
 # This fixture will run once for the entire module (as opposed to once per test)
 @pytest.fixture(scope='module')
@@ -116,7 +118,11 @@ def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
         command_args.append('-e')
         command_args.append(name)
     # # Test a valid policy file
-    policy = load_policy(test_policy_dir / 'minimal_action.policy.xml')
+    policy_tree = load_policy(test_policy_dir / 'minimal_action.policy.xml')
+    enclaves_element = policy_tree.find('enclaves')
+    for enclave in enclaves_element:
+        identity_name = enclave.get('path')
+        policy_element = _policy.get_policy_from_tree(identity_name, policy_tree)
     # assert cli.main(
     #     argv=command_args + [
     #         '-p', str(test_policy_dir / 'minimal_action.policy.xml')
