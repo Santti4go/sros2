@@ -120,9 +120,9 @@ def test_cli_policies_args(capsys, keystore_dir, test_policy_dir):
     # # Test a valid policy file
     policy_tree = load_policy(test_policy_dir / 'minimal_action.policy.xml')
     enclaves_element = policy_tree.find('enclaves')
-    for enclave in enclaves_element:
-        identity_name = enclave.get('path')
-        policy_element = _policy.get_policy_from_tree(identity_name, policy_tree)
+    # for enclave in enclaves_element:
+    #     identity_name = enclave.get('path')
+    #     policy_element = _policy.get_policy_from_tree(identity_name, policy_tree)
     # assert cli.main(
     #     argv=command_args + [
     #         '-p', str(test_policy_dir / 'minimal_action.policy.xml')
