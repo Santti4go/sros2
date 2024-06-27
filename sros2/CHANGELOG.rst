@@ -2,8 +2,8 @@
 Changelog for package sros2
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.13.2 (2024-06-27)
+-------------------
 * Fix sros2 tests on Windows Debug. (`#317 <https://github.com/ros2/sros2/issues/317>`_) (`#320 <https://github.com/ros2/sros2/issues/320>`_)
   Co-authored-by: Chris Lalancette <clalancette@gmail.com>
 * [TESTS] Update tests and add test for generate_artifacts (`#311 <https://github.com/ros2/sros2/issues/311>`_) (`#319 <https://github.com/ros2/sros2/issues/319>`_)
