@@ -14,7 +14,7 @@ Please follow [these instructions](https://docs.ros.org/en/rolling/Installation/
 
 To build the ROS2 code with security extensions, call:
 ```bat
-colcon build --cmake-args -DSECURITY=ON
+colcon build --cmake-args -DSECURITY=ON --packages-select fastrtps rmw_fastrtps_cpp rmw_fastrtps_dynamic_cpp rmw_fastrtps_shared_cpp
 ```
 
 ### Install OpenSSL
