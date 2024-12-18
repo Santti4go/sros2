@@ -30,7 +30,7 @@ _KS_PRIVATE = 'private'
 _DEFAULT_COMMON_NAME = 'sros2CA'
 
 
-def create_keystore(keystore_path: pathlib.Path, independent_CA=False) -> None:
+def create_keystore(keystore_path: pathlib.Path, split_CA=False) -> None:
     if is_valid_keystore(keystore_path):
         raise sros2.errors.KeystoreExistsError(keystore_path)
 
@@ -65,7 +65,7 @@ def create_keystore(keystore_path: pathlib.Path, independent_CA=False) -> None:
     if not all(x.is_file() for x in required_files):
         _create_ca_key_cert(keystore_ca_key_path, keystore_ca_cert_path)
 
-        if independent_CA:
+        if split_CA:
             # Create independent Permissions and Identity CA
             _create_ca_key_cert(keystore_permissions_ca_key_path, keystore_permissions_ca_cert_path)
             _create_ca_key_cert(keystore_identity_ca_key_path, keystore_identity_ca_cert_path)
