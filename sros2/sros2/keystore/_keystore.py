@@ -30,7 +30,7 @@ _KS_PRIVATE = 'private'
 _DEFAULT_COMMON_NAME = 'sros2CA'
 
 
-def create_keystore(keystore_path: pathlib.Path) -> None:
+def create_keystore(keystore_path: pathlib.Path, independent_CA=False) -> None:
     if is_valid_keystore(keystore_path):
         raise sros2.errors.KeystoreExistsError(keystore_path)
 
@@ -65,11 +65,17 @@ def create_keystore(keystore_path: pathlib.Path) -> None:
     if not all(x.is_file() for x in required_files):
         _create_ca_key_cert(keystore_ca_key_path, keystore_ca_cert_path)
 
-        for path in (keystore_permissions_ca_cert_path, keystore_identity_ca_cert_path):
-            _utilities.create_symlink(src=pathlib.Path('ca.cert.pem'), dst=path)
+        if independent_CA:
+            # Create independent Permissions and Identity CA
+            _create_ca_key_cert(keystore_permissions_ca_key_path, keystore_permissions_ca_cert_path)
+            _create_ca_key_cert(keystore_identity_ca_key_path, keystore_identity_ca_cert_path)
+        else:
+            # Use the root CA as Permissions and Identity CA
+            for path in (keystore_permissions_ca_cert_path, keystore_identity_ca_cert_path):
+                _utilities.create_symlink(src=pathlib.Path('ca.cert.pem'), dst=path)
 
-        for path in (keystore_permissions_ca_key_path, keystore_identity_ca_key_path):
-            _utilities.create_symlink(src=pathlib.Path('ca.key.pem'), dst=path)
+            for path in (keystore_permissions_ca_key_path, keystore_identity_ca_key_path):
+                _utilities.create_symlink(src=pathlib.Path('ca.key.pem'), dst=path)
 
     # Create governance file if it doesn't already exist
     gov_path = keystore_path.joinpath(_KS_ENCLAVES, 'governance.xml')
