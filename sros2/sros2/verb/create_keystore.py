@@ -33,8 +33,7 @@ class CreateKeystoreVerb(VerbExtension):
         arg = parser.add_argument('ROOT', type=pathlib.Path, help='root path of keystore')
         arg = parser.add_argument('--split-CA', action='store_true', default=False,
                                   help='splits the Certificate Authority structure to \
-                                    use multiple CAs instead of a single self-signed root CA',
-                                )
+                                    use multiple CAs instead of a single self-signed root CA')
         arg.completer = DirectoriesCompleter()
 
     def main(self, *, args) -> int:

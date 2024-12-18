@@ -67,8 +67,10 @@ def create_keystore(keystore_path: pathlib.Path, split_CA=False) -> None:
 
         if split_CA:
             # Create independent Permissions and Identity CA
-            _create_ca_key_cert(keystore_permissions_ca_key_path, keystore_permissions_ca_cert_path)
-            _create_ca_key_cert(keystore_identity_ca_key_path, keystore_identity_ca_cert_path)
+            _create_ca_key_cert(keystore_permissions_ca_key_path,
+                                keystore_permissions_ca_cert_path)
+            _create_ca_key_cert(keystore_identity_ca_key_path,
+                                keystore_identity_ca_cert_path)
         else:
             # Use the root CA as Permissions and Identity CA
             for path in (keystore_permissions_ca_cert_path, keystore_identity_ca_cert_path):
