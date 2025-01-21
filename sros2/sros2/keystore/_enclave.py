@@ -66,6 +66,9 @@ def create_enclave(keystore_path: pathlib.Path, identity: str) -> None:
     keystore_identity_ca_key_path = _keystore.get_keystore_private_dir(
         keystore_path).joinpath('identity_ca.key.pem')
 
+    # The root CA that signed the identity_ca.cert.pem
+    root_ca = _keystore.get_keystore_public_dir(
+        keystore_path).joinpath('ca.cert.pem')
     # Only create certs/keys if they don't already exist
     cert_path = key_dir.joinpath('cert.pem')
     key_path = key_dir.joinpath('key.pem')
@@ -75,7 +78,8 @@ def create_enclave(keystore_path: pathlib.Path, identity: str) -> None:
             keystore_identity_ca_key_path,
             identity,
             cert_path,
-            key_path
+            key_path,
+            root_ca=root_ca
         )
 
     # create a wildcard permissions file for this node which can be overridden
@@ -87,7 +91,6 @@ def create_enclave(keystore_path: pathlib.Path, identity: str) -> None:
 
     permissions_path = key_dir.joinpath('permissions.xml')
     _permission.create_permission_file(permissions_path, _utilities.domain_id(), policy_element)
-
     signed_permissions_path = key_dir.joinpath('permissions.p7s')
     keystore_permissions_ca_cert_path = _keystore.get_keystore_public_dir(
         keystore_path).joinpath('permissions_ca.cert.pem')
@@ -126,15 +129,17 @@ def _is_enclave_name_valid(name: str) -> bool:
         print(e)
         return False
 
-
+# Move this to _utilities so we can use it in _keystore
 def _create_key_and_cert(
         keystore_ca_cert_path: pathlib.Path,
         keystore_ca_key_path: pathlib.Path,
         identity: str,
         cert_path: pathlib.Path,
-        key_path: pathlib.Path):
+        key_path: pathlib.Path,
+        root_ca: pathlib.Path):
     # Load the CA cert and key from disk
     ca_cert = _utilities.load_cert(keystore_ca_cert_path)
+    root_ca_cert = _utilities.load_cert(root_ca)
 
     with open(keystore_ca_key_path, 'rb') as f:
         ca_key = serialization.load_pem_private_key(f.read(), None, cryptography_backend())
@@ -145,4 +150,6 @@ def _create_key_and_cert(
         ca_key=ca_key)
 
     _utilities.write_key(private_key, key_path)
-    _utilities.write_cert(cert, cert_path)
+    # Not needed to include the full chain
+    _utilities.write_cert(cert, cert_path, root_ca=[ca_cert, root_ca_cert])
+    # _utilities.write_cert(cert, cert_path)
