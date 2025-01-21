@@ -23,6 +23,8 @@ from cryptography.hazmat.bindings.openssl.binding import Binding as SSLBinding
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.x509.oid import ExtendedKeyUsageOID
+from cryptography.x509 import AuthorityKeyIdentifier
 
 import sros2.errors
 
@@ -30,7 +32,40 @@ _DOMAIN_ID_ENV = 'ROS_DOMAIN_ID'
 _KEYSTORE_DIR_ENV = 'ROS_SECURITY_KEYSTORE'
 
 
+def create_signed_cert(
+        keystore_ca_cert_path: pathlib.Path,
+        keystore_ca_key_path: pathlib.Path,
+        identity: str,
+        cert_path: pathlib.Path,
+        key_path: pathlib.Path,
+        **kwargs):
+    # Load the CA cert and key from disk
+    ca_cert = load_cert(keystore_ca_cert_path)
+
+    with open(keystore_ca_key_path, 'rb') as f:
+        ca_key = serialization.load_pem_private_key(f.read(), None, cryptography_backend())
+
+    ca_pub_key = ca_cert.public_key()
+    # Calculate the key ID from the issuer's public key
+    key_id = x509.SubjectKeyIdentifier.from_public_key(ca_pub_key).digest
+
+    cert, private_key = build_key_and_cert(
+        x509.Name([x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, identity)]),
+        issuer_name=ca_cert.subject,
+        ca_key=ca_key,
+        key_id=key_id,
+        **kwargs)
+
+    write_key(private_key, key_path)
+    if identity.startswith("Perm"):
+        # write_cert(cert, cert_path)
+        write_cert(cert, cert_path, root_ca=[ ca_cert ])
+    else:
+        # write_cert(cert, cert_path)
+        write_cert(cert, cert_path, root_ca=[ ca_cert ])
+
 def create_symlink(*, src: pathlib.Path, dst: pathlib.Path):
+    """Creates symlink"""
     if dst.exists():
         # Don't do more work than we need to
         if dst.samefile(dst.parent.joinpath(src)):
@@ -67,7 +102,9 @@ def create_smime_signed_file(cert_path, key_path, unsigned_file_path, signed_fil
         f.write(_sign_bytes(cert, private_key, content))
 
 
-def build_key_and_cert(subject_name, *, ca=False, ca_key=None, issuer_name=''):
+def build_key_and_cert(subject_name, *, ca=False, ca_key=None, key_id=None,
+                       issuer_name='',
+                       path_length=1, duration_days=3650):
     if not issuer_name:
         issuer_name = subject_name
 
@@ -77,7 +114,7 @@ def build_key_and_cert(subject_name, *, ca=False, ca_key=None, issuer_name=''):
         ca_key = private_key
 
     if ca:
-        extension = x509.BasicConstraints(ca=True, path_length=1)
+        extension = x509.BasicConstraints(ca=True, path_length=path_length)
     else:
         extension = x509.BasicConstraints(ca=False, path_length=None)
 
@@ -91,17 +128,60 @@ def build_key_and_cert(subject_name, *, ca=False, ca_key=None, issuer_name=''):
             # Using a day earlier here to prevent Connext (5.3.1) from complaining
             # when extracting it from the permissions file and thinking it's in the future
             # https://github.com/ros2/ci/pull/436#issuecomment-624874296
-            utcnow - datetime.timedelta(days=1)
+            utcnow - datetime.timedelta(days=10)
         ).not_valid_after(
             # TODO: This should not be hard-coded
-            utcnow + datetime.timedelta(days=3650)
+            utcnow + datetime.timedelta(days=duration_days)
         ).public_key(
             private_key.public_key()
         ).subject_name(
             subject_name
         ).add_extension(
-            extension, critical=ca
+            extension, critical=True
         )
+    if ca and subject_name != "sros2CA":
+        builder = builder.add_extension(
+                    x509.KeyUsage(
+                        key_agreement=False,
+                        digital_signature=True,
+                        key_encipherment=False,
+                        key_cert_sign=True,
+                        crl_sign=True,
+                        content_commitment=False,
+                        data_encipherment=False,
+                        encipher_only=False,
+                        decipher_only=False
+                    ),
+                    critical=True
+                )
+        # Add the AKI extension
+        builder = builder.add_extension(
+                AuthorityKeyIdentifier(key_identifier=key_id,
+                                       authority_cert_issuer=None,
+                                       authority_cert_serial_number=None),
+                critical=False
+        )
+    if issuer_name == subject_name or ca:
+        # Add Subject Key Identifier (SKI)
+        builder = builder.add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(private_key.public_key()),
+            critical=False
+        )
+    else:
+        builder = builder.add_extension(
+                    x509.KeyUsage(
+                        key_agreement=False,
+                        digital_signature=True,
+                        key_encipherment=False,
+                        key_cert_sign=False,
+                        crl_sign=False,
+                        content_commitment=False,
+                        data_encipherment=False,
+                        encipher_only=False,
+                        decipher_only=False
+                    ),
+                    critical=True
+                )
     cert = builder.sign(ca_key, hashes.SHA256(), cryptography_backend())
 
     return (cert, private_key)
@@ -122,9 +202,16 @@ def write_key(
             encryption_algorithm=encryption_algorithm))
 
 
-def write_cert(cert, cert_path: pathlib.Path, *, encoding=serialization.Encoding.PEM):
+def write_cert(cert, cert_path: pathlib.Path, *,
+               root_ca=None, encoding=serialization.Encoding.PEM
+               ):
     with open(cert_path, 'wb') as f:
         f.write(cert.public_bytes(encoding=encoding))
+        if root_ca:
+            for ca in root_ca:
+                print(f"writing root_ca as part of the chain: {ca}")
+                # Write the entire chain
+                f.write(ca.public_bytes(encoding=encoding))
 
 
 def load_cert(cert_path: pathlib.Path):
