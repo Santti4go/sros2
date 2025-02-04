@@ -28,6 +28,7 @@ import sros2.errors
 _DOMAIN_ID_ENV = 'ROS_DOMAIN_ID'
 _KEYSTORE_DIR_ENV = 'ROS_SECURITY_KEYSTORE'
 
+
 def create_signed_cert(
         keystore_ca_cert_path: pathlib.Path,
         keystore_ca_key_path: pathlib.Path,
@@ -53,7 +54,7 @@ def create_signed_cert(
         **kwargs)
 
     write_key(private_key, key_path)
-    write_cert(cert, cert_path, chain_ca=[ ca_cert ])  # Store the full chain aswell
+    write_cert(cert, cert_path, chain_ca=[ca_cert])  # Store the full chain aswell
 
 
 def create_symlink(*, src: pathlib.Path, dst: pathlib.Path):
