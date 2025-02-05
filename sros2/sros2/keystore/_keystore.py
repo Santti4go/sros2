@@ -69,7 +69,7 @@ def create_keystore(keystore_path: pathlib.Path, split_CA=False) -> None:
             # Create independent Permissions and Identity CA
             _utilities.create_signed_cert(keystore_ca_cert_path,
                                           keystore_ca_key_path,
-                                          "IdentityCA",
+                                          'IdentityCA',
                                           keystore_identity_ca_cert_path,
                                           keystore_identity_ca_key_path,
                                           ca=True,
@@ -77,7 +77,7 @@ def create_keystore(keystore_path: pathlib.Path, split_CA=False) -> None:
                                           duration_days=5)
             _utilities.create_signed_cert(keystore_ca_cert_path,
                                           keystore_ca_key_path,
-                                          "PermissionsCA",
+                                          'PermissionsCA',
                                           keystore_permissions_ca_cert_path,
                                           keystore_permissions_ca_key_path,
                                           ca=True,
