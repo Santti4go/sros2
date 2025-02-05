@@ -108,7 +108,7 @@ def build_key_and_cert(subject_name, *, ca=False, ca_key=None, issuer_name='',
     if ca and not path_length:
         path_length = 1
 
-    extension = x509.BasicConstraints(ca=True, path_length=path_length)
+    extension = x509.BasicConstraints(ca=ca, path_length=path_length)
     utcnow = datetime.datetime.utcnow()
     builder = x509.CertificateBuilder(
         ).issuer_name(
@@ -130,7 +130,7 @@ def build_key_and_cert(subject_name, *, ca=False, ca_key=None, issuer_name='',
             extension, critical=ca
         )
     # Add extension for when it's not a self signed certificate
-    if issuer_name != subject_name or not ca:
+    if issuer_name != subject_name and ca:
         builder = builder.add_extension(
             x509.KeyUsage(
                 key_agreement=False,
