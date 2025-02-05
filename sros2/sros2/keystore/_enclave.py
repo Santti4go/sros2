@@ -140,7 +140,6 @@ def _create_key_and_cert(
         root_ca: pathlib.Path):
     # Load the CA cert and key from disk
     ca_cert = _utilities.load_cert(keystore_ca_cert_path)
-    root_ca_cert = _utilities.load_cert(root_ca)
 
     with open(keystore_ca_key_path, 'rb') as f:
         ca_key = serialization.load_pem_private_key(f.read(), None, cryptography_backend())
@@ -151,4 +150,4 @@ def _create_key_and_cert(
         ca_key=ca_key)
 
     _utilities.write_key(private_key, key_path)
-    _utilities.write_cert(cert, cert_path, chain_ca=[ca_cert, root_ca_cert])
+    _utilities.write_cert(cert, cert_path)
